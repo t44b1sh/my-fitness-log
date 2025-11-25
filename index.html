@@ -180,6 +180,7 @@
                                 <option value="distance">Total Distance (km)</option>
                                 <option value="time">Total Time (minutes)</option>
                                 <option value="speed">Average Speed (km/h)</option>
+                                <option value="calories">Calories Burnt (kcal)</option> <!-- NEW: Calories Option -->
                             </select>
                         </div>
 
@@ -306,7 +307,7 @@
             window.loadAndRenderWorkouts(); 
         };
 
-        // --- UI State Management and Rendering (Mostly Unchanged) ---
+        // --- UI State Management and Rendering ---
 
         window.activateTab = function(tabName) {
             window.currentTab = tabName;
@@ -383,12 +384,14 @@
                     const distanceKm = window.parseDistance(workout.distance);
                     const timeMin = window.parseTime(workout.time);
                     const speed = window.parseSpeed(workout.speed);
+                    const calories = workout.calories ? parseInt(workout.calories, 10) : 0; 
 
                     statsHtml = `
                         <div class="grid grid-cols-2 gap-2 text-sm">
                             <p><span class="font-semibold text-blue-300">Dist:</span> ${distanceKm.toFixed(1)} km</p>
                             <p><span class="font-semibold text-blue-300">Time:</span> ${timeMin.toFixed(0)} min</p>
-                            <p class="col-span-2"><span class="font-semibold text-blue-300">Speed:</span> ${speed.toFixed(1)} km/h</p>
+                            <p><span class="font-semibold text-blue-300">Speed:</span> ${speed.toFixed(1)} km/h</p>
+                            <p><span class="font-semibold text-blue-300">Cals:</span> ${calories} kcal</p>
                         </div>
                     `;
                 }
@@ -519,6 +522,7 @@
                     ${createInputField('time', 'Time (e.g., 30 min, 1h)', 'text', 'e.g. 30 min', 'required')}
                     ${createInputField('distance', 'Distance (e.g., 5 km) (Optional)', 'text', 'e.g. 5 km', '')}
                     ${createInputField('speed', 'Avg. Speed (e.g., 10 km/h)', 'text', 'e.g. 10 km/h', 'required')}
+                    ${createInputField('calories', 'Calories Burnt (kcal) (Optional)', 'number', 'e.g. 300', '')}
                 `;
             }
             window.updateDatalistOptions(type);
@@ -530,7 +534,7 @@
                     <label for="${id}" class="block text-sm font-semibold text-gray-300 mb-1">${label}</label>
                     <input type="${type}" id="${id}" name="${id}" placeholder="${placeholder}" ${required}
                         class="w-full p-3 bg-gray-700 text-white border border-gray-600 rounded-xl focus:ring-teal-500 focus:border-teal-500 min-w-0 transition duration-150"
-                        ${type === 'number' ? 'min="0" step="0.1"' : ''}>
+                        ${type === 'number' ? 'min="0" step="1"' : ''}>
                 </div>
             `;
         }
@@ -606,6 +610,7 @@
                 data.time = time;
                 data.distance = form.querySelector('#distance').value.trim() || '0 km';
                 data.speed = speed;
+                data.calories = form.querySelector('#calories').value.trim() || '0'; 
             }
 
             // --- LOCAL STORAGE LOGIC ---
@@ -671,6 +676,7 @@
                 document.getElementById('time').value = workout.time || '';
                 document.getElementById('distance').value = workout.distance || '';
                 document.getElementById('speed').value = workout.speed || '';
+                document.getElementById('calories').value = workout.calories || ''; 
             }
 
             // Scroll to the top of the form for mobile UX
@@ -756,7 +762,7 @@
             }
         };
 
-        // --- Charting Logic (Unchanged) ---
+        // --- Charting Logic ---
 
         window.renderProgressChart = function(workouts) {
             if (window.currentTab !== 'progress') return;
@@ -911,6 +917,12 @@
                     label = 'Average Speed';
                     unit = 'km/h';
                     dataPoints = cardioWorkouts.map(w => window.parseSpeed(w.speed));
+                    break;
+                case 'calories': // NEW: Handle Calories
+                    label = 'Calories Burnt';
+                    unit = 'kcal';
+                    // w.calories is stored as a string, parse to an integer or default to 0
+                    dataPoints = cardioWorkouts.map(w => parseInt(w.calories, 10) || 0); 
                     break;
             }
 
